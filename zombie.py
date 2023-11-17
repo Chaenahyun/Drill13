@@ -93,7 +93,7 @@ class Zombie:
         self.x += self.speed * math.cos(self.dir) * game_framework.frame_time
         self.y += self.speed * math.sin(self.dir) * game_framework.frame_time
 
-    def move_to(self, r=0.5):
+    def move_to(self, r=7):
         self.state = 'Walk'
         self.move_slightly_to(self.tx, self.ty)
         if self.distance_less_than(self.tx, self.ty, self.x, self.y, r):
@@ -111,21 +111,26 @@ class Zombie:
         else:
             return BehaviorTree.FAIL
 
-    def move_to_boy(self, r=0.5):
+    def move_to_boy(self, r=7):
         if self.ball_count > play_mode.boy.ball_count:
             # 좀비가 더 많은 공을 가지고 있으면 소년을 향해 이동
-            self.state = 'Walk'
-            # 소년의 현재 위치를 타겟으로 설정
-            self.set_target_location(play_mode.boy.x, play_mode.boy.y)
-            self.move_slightly_to(play_mode.boy.x, play_mode.boy.y)
+            if not self.target_set:  # 타겟이 설정되지 않았다면 설정
+                self.state = 'Walk'
+                # 소년의 현재 위치를 타겟으로 설정
+                self.set_target_location(play_mode.boy.x, play_mode.boy.y)
+                self.move_slightly_to(play_mode.boy.x, play_mode.boy.y)
 
-            # 수정된 부분: 거리가 r 이하이면 계속해서 이동
+            # 좀비와 소년 사이의 거리가 r 이하일 때 소년을 향해 이동
             if self.distance_less_than(play_mode.boy.x, play_mode.boy.y, self.x, self.y, r):
-                return BehaviorTree.RUNNING
+                self.state = 'Walk'
+                # 거리가 r 이하이면 목표에 도달한 것으로 간주하여 SUCCESS 반환
+                return BehaviorTree.SUCCESS
             else:
+                # 거리가 r 이상이면 계속해서 이동
                 return BehaviorTree.RUNNING
         else:
             # 그렇지 않으면 순찰
+            self.target_set = False  # 새로운 타겟이 필요하므로 초기화
             return BehaviorTree.FAIL
 
     def is_zombie_balls_more(self, unused):
