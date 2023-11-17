@@ -115,11 +115,13 @@ class Zombie:
         if self.ball_count > play_mode.boy.ball_count:
             # 좀비가 더 많은 공을 가지고 있으면 소년을 향해 이동
             self.state = 'Walk'
-            # 수정된 부분: 소년의 현재 위치를 타겟으로 설정
+            # 소년의 현재 위치를 타겟으로 설정
             self.set_target_location(play_mode.boy.x, play_mode.boy.y)
             self.move_slightly_to(play_mode.boy.x, play_mode.boy.y)
+
+            # 수정된 부분: 거리가 r 이하이면 계속해서 이동
             if self.distance_less_than(play_mode.boy.x, play_mode.boy.y, self.x, self.y, r):
-                return BehaviorTree.SUCCESS
+                return BehaviorTree.RUNNING
             else:
                 return BehaviorTree.RUNNING
         else:
@@ -140,7 +142,8 @@ class Zombie:
         root_move_to_target = Sequence('Move to target location', a1, a2)
 
         a3 = Action('Set random location', self.set_random_location)
-        root_wander = Sequence('Wander', a3, a2)
+        root_wander_first_time = Sequence('Wander (First Time)', a3, a2)
+
 
         c1 = Condition('소년이 근처에 있는가?', self.is_boy_nearby, 7)
         a4 = Action('소년한테 접근', self.move_to_boy)
@@ -148,13 +151,10 @@ class Zombie:
 
         c2 = Condition('좀비가 소년보다 공이 많은가?', self.is_zombie_balls_more, 0)
         a5 = Action('소년한테 접근', self.move_to_boy)
-        root_chase_or_wander = Selector('추적 또는 배회', Sequence('추적', a5), root_wander)
+        root_chase_or_wander = Selector('추적 또는 배회', Sequence('추적', a5), root_wander_first_time)
 
         a6 = Action('순찰 위치 가져오기', self.get_patrol_location)
         root_patrol = Sequence('순찰', a6, a2)
 
-        # 수정된 부분: root_wander를 처음 한 번만 실행하도록 수정
-        root_wander_first_time = Sequence('Wander (First Time)', a3, a2)
-
-        root = Selector('루트', root_chase_boy, root_chase_or_wander, root_patrol, root_wander_first_time)
+        root = Selector('루트', root_chase_boy, root_chase_or_wander, root_patrol)
         self.bt = BehaviorTree(root)
