@@ -115,6 +115,8 @@ class Zombie:
         if self.ball_count > play_mode.boy.ball_count:
             # 좀비가 더 많은 공을 가지고 있으면 소년을 향해 이동
             self.state = 'Walk'
+            # 수정된 부분: 소년의 현재 위치를 타겟으로 설정
+            self.set_target_location(play_mode.boy.x, play_mode.boy.y)
             self.move_slightly_to(play_mode.boy.x, play_mode.boy.y)
             if self.distance_less_than(play_mode.boy.x, play_mode.boy.y, self.x, self.y, r):
                 return BehaviorTree.SUCCESS
