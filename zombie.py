@@ -151,5 +151,8 @@ class Zombie:
         a6 = Action('순찰 위치 가져오기', self.get_patrol_location)
         root_patrol = Sequence('순찰', a6, a2)
 
-        root = Selector('루트', root_chase_boy, root_chase_or_wander, root_patrol)
+        # 수정된 부분: root_wander를 처음 한 번만 실행하도록 수정
+        root_wander_first_time = Sequence('Wander (First Time)', a3, a2)
+
+        root = Selector('루트', root_chase_boy, root_chase_or_wander, root_patrol, root_wander_first_time)
         self.bt = BehaviorTree(root)
